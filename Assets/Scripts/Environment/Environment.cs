@@ -19,15 +19,26 @@ public class Environment : MonoBehaviour
     // TODO: change to a list to deal with our food objects and water objects
     int numFood = 0;
 
+    public int numStartingDinos = 25;
+    int numDinos = 0;
+
     public int maxFood = 100;
 
     TileType[,] terrain;
+
+    List<GameObject> allDinos = new List<GameObject>();
+
+    public Logger logger;
+
+    float lastUpdatedLogger = 0;
+    float loggerInterval = 1;
 
     // Start is called before the first frame update
     void Start()
     {
         initMap();
         initTerrainObjects();
+        logger = gameObject.GetComponent<Logger>();
 
         Debug.Log("done initializing map and terrain");
     }
@@ -37,6 +48,20 @@ public class Environment : MonoBehaviour
     {
         if (numFood < maxFood) {
             generateFood();
+        }
+
+        if(Time.time - lastUpdatedLogger > loggerInterval)
+        {
+            lastUpdatedLogger = Time.time;
+            if(logger == null)
+            {
+                Debug.Log("logger is null");
+            }
+            else
+            {
+
+                logger.writePopulation(getPopulation());
+            }
         }
     }
 
@@ -78,20 +103,21 @@ public class Environment : MonoBehaviour
         }
 
         // spawn in n amount of dinos
-        //for (int i = 0; i < 10; i++)
-        //{
-        //    spawnDino();
-        //}
+        for (int i = 0; i < numStartingDinos; i++)
+        {
+            spawnDino();
+            numDinos++;
+        }
 
-        //for(int i = 0; i < 3; i++)
-        //{
-        //    int waterY = i * 100;
-        //    for(int j = 0; j < 3; j++)
-        //    {
-        //        int waterX = j * 100;
-        //        addWater(waterX, waterY);
-        //    }
-        //}
+        for (int i = 0; i < 3; i++)
+        {
+            int waterY = i * 100;
+            for (int j = 0; j < 3; j++)
+            {
+                int waterX = j * 100;
+                addWater(waterX, waterY);
+            }
+        }
     }
 
     void spawnDino()
@@ -108,13 +134,38 @@ public class Environment : MonoBehaviour
         }
 
         // generate food prefab
-        GameObject newFood = Instantiate(dino, new Vector3(randX, 0, randY), Quaternion.identity);
+        GameObject newDino = Instantiate(dino, new Vector3(randX, 0, randY), Quaternion.identity);
+
+        allDinos.Add(newDino);
+
         //newFood.GetComponent<FoodBush>().setCoord(randX, randY);
         //Debug.Log("Generated Food at : " + randX + " " + randY);
         //numFood++;
 
         // mark tile as food
         //terrain[randX, randY] = TileType.Food;
+    }
+
+    public void addDino(GameObject dino)
+    {
+        allDinos.Add(dino);
+    }
+
+    public void removeDino(GameObject dino)
+    {
+        allDinos.Remove(dino);
+    }
+
+    int getPopulation()
+    {
+        int nonNullCount = 0;
+
+        foreach(GameObject dino in allDinos)
+        {
+            nonNullCount++;
+        }
+
+        return nonNullCount;
     }
 
     void addWater(int waterX, int waterY)
@@ -185,6 +236,7 @@ public class Environment : MonoBehaviour
 
     void generateFood()
     {
+        //Debug.Log("generating food");
         // generate random coordinate
         int randX = Mathf.RoundToInt(Random.Range(0, mapWidth));
         int randY = Mathf.RoundToInt(Random.Range(0, mapHeight));
@@ -197,13 +249,21 @@ public class Environment : MonoBehaviour
         }
 
         // generate food prefab
-        GameObject newFood = Instantiate(food, new Vector3(randX, 0, randY), Quaternion.identity);
+        GameObject newFood = Instantiate(food, new Vector3(randX + 0.5f, 0, randY + 0.5f), Quaternion.identity);
         newFood.GetComponent<FoodBush>().setCoord(randX, randY);
         //Debug.Log("Generated Food at : " + randX + " " + randY);
         numFood++;
 
         // mark tile as food
         terrain[randX, randY] = TileType.Food;
+    }
+
+    // call this from plant when it's eaten
+    public void removeFood(int r, int c)
+    {
+        //Debug.Log("removing food from terrain");
+        numFood--;
+        terrain[r, c] = TileType.Ground;
     }
 
     void initTerrainObjects()

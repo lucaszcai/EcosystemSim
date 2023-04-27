@@ -53,10 +53,16 @@ public class DinoBehavior : Organism
 
     public Genes genes;
     string[] traits = new string[] { "speed", "sense" };
-    float[] defaultVals = new float[] { 5, 15 };
+    float[] defaultVals = new float[] { 7, 20 };
+
+    float lastMove = 0;
+
+    public GameObject floor;
+
+    Environment environment;
 
     // REMOVE THIS LATER
-    public bool male;
+    //public bool male;
 
 
     // awake called on instantiation
@@ -75,7 +81,9 @@ public class DinoBehavior : Organism
         genes = new Genes(traits, defaultVals);
 
         // REMOVE THIS LATER
-        genes.male = male;
+        //genes.male = male;
+        floor = GameObject.Find("Environment");
+        environment = floor.GetComponent<Environment>();
 
         interpretGenes();
     }
@@ -96,6 +104,12 @@ public class DinoBehavior : Organism
         }
     }
 
+    public void reInitGenes(Genes mother, Genes father)
+    {
+        genes = new Genes(traits, defaultVals, mother, father);
+        interpretGenes();
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -114,18 +128,35 @@ public class DinoBehavior : Organism
         {
             currentState = BehaviorState.Dying;
             Die();
+            environment.removeDino(gameObject);
         }
         if(thirst > maxThirst)
         {
             currentState = BehaviorState.Dying;
             Die();
+            environment.removeDino(gameObject);
         }
     }
 
     // action changes our currentState
     void takeAction()
     {
-        if(currentState == BehaviorState.Dying)
+        if (navMeshAgent.velocity.magnitude > 0f)
+        {
+            lastMove = Time.time;
+        }
+
+        // if we're exploring and we haven't moved, we're stuck so reset.
+        if(currentState == BehaviorState.Exploring && Time.time - lastMove > 5)
+        {
+            // reset
+            //Debug.Log("hasn't moved for 5 secs. reseting");
+            //Debug.Log(transform.position);
+            currentState = BehaviorState.None;
+            navMeshAgent.ResetPath();
+        }
+
+        if (currentState == BehaviorState.Dying)
         {
             return;
         }
@@ -191,12 +222,8 @@ public class DinoBehavior : Organism
 
     bool searchForMate()
     {
-
         Collider[] nearby = Physics.OverlapSphere(transform.position, sphereCollider.radius);
 
-        Debug.Log("nearby");
-        Debug.Log(nearby);
-        //return false;
 
         Collider closestCollider = null;
         float closestDist = Mathf.Infinity;
@@ -235,13 +262,14 @@ public class DinoBehavior : Organism
             //foodTarget = closestCollider.gameObject;
             //currentState = BehaviorState.GoingToFood;
             Vector3 midpoint = (transform.position + closestCollider.transform.position) / 2;
-            closestCollider.gameObject.GetComponent<DinoBehavior>().mateRequested(gameObject, midpoint);
 
             // set the status of this
             currentState = BehaviorState.GoingToMate;
-            mateLocation = midpoint;
-            mateTarget = closestCollider.gameObject;
+            //mateLocation = midpoint;
 
+            mateTarget = closestCollider.gameObject;
+            mateLocation = mateTarget.transform.position;
+            closestCollider.gameObject.GetComponent<DinoBehavior>().mateRequested(gameObject, mateLocation);
 
             return true;
         }
@@ -321,18 +349,49 @@ public class DinoBehavior : Organism
         }
     }
 
+    Vector3 chooseExploreCoord()
+    {
+        Vector3 randomDirection = Random.insideUnitSphere;
+        float angle = Random.Range(-117.5f, 117.5f); // FOV of 235 degrees
+        Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.up);
+        Vector3 relativeDirection = rotation * randomDirection;
+        float distance = Random.Range(10, 20); // The minimum and maximum distance for the target position
+        Vector3 targetPosition = transform.position + relativeDirection.normalized * distance;
+
+        return targetPosition;
+    }
+
+    public void confirmMate()
+    {
+        currentState = BehaviorState.Mating;
+    }
+
     void makeMove()
     {
         switch (currentState)
         {
             case BehaviorState.Exploring:
-                // move to a random coord
-                Vector3 coord = new Vector3(transform.position.x + Random.Range(5, 20), 0, transform.position.z + Random.Range(5, 20));
-                moveToCoord(coord, false);
+                // make sure our random coord is reachable, only move if it is
+                //Vector3 coord = new Vector3(transform.position.x + Random.Range(-10, 10), 0, transform.position.z + Random.Range(-10, 10));
+                Vector3 coord = chooseExploreCoord();
+
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(coord, out hit, navMeshAgent.height * 2, NavMesh.AllAreas))
+                {
+                    // The target position is reachable, so move to it
+                    moveToCoord(coord, false);
+                }
+                else
+                {
+                    //Debug.Log("unreachable coordinate. try again");
+                    //Debug.Log(coord);
+                }
+
+
                 break;
             case BehaviorState.GoingToFood:
                 // if haven't set this food as a destination yet
-                if(!(navMeshAgent.destination == foodTarget.transform.position))
+                if (!(navMeshAgent.destination == foodTarget.transform.position))
                 {
                     // move to food
                     moveToCoord(foodTarget.transform.position, true);
@@ -345,7 +404,7 @@ public class DinoBehavior : Organism
                     navMeshAgent.SetDestination(transform.position);
                     currentState = BehaviorState.Eating;
                 }
-                
+
                 break;
             case BehaviorState.GoingToWater:
                 // get water edge
@@ -371,19 +430,32 @@ public class DinoBehavior : Organism
             case BehaviorState.GoingToMate:
                 // get water edge
 
-                // if haven't set this pos as a destination yet
-                if ( !(navMeshAgent.destination == mateLocation))
+                // male goes to female
+                if (genes.getMale())
                 {
-                    moveToCoord(mateLocation, true);
+                    // if haven't set this pos as a destination yet
+                    if (!(navMeshAgent.destination == mateLocation))
+                    {
+                        moveToCoord(mateLocation, true);
+                    }
+
+                    // check if we've arrived
+                    if (checkAtPos(mateLocation))
+                    {
+                        navMeshAgent.SetDestination(transform.position);
+
+                        currentState = BehaviorState.Mating;
+
+                        // update mate
+                        mateTarget.GetComponent<DinoBehavior>().confirmMate();
+                    }
                 }
-
-                // check if we've arrived
-                if (checkAtPos(mateLocation))
+                else
                 {
-                    navMeshAgent.SetDestination(transform.position);
-
-                    currentState = BehaviorState.Mating;
-
+                    if (!(navMeshAgent.destination == mateLocation))
+                    {
+                        moveToCoord(mateLocation, true);
+                    }
                 }
                 break;
             case BehaviorState.Eating:
@@ -467,7 +539,6 @@ public class DinoBehavior : Organism
         // first iteration
         if(mateStart == -1)
         {
-            Debug.Log("first mate iteration");
             mateStart = Time.time;
         }
 
@@ -478,6 +549,7 @@ public class DinoBehavior : Organism
             if (!genes.getMale())
             {
                 GameObject newEgg = Instantiate(egg, transform.position, Quaternion.identity);
+                newEgg.GetComponent<Egg>().setParentGenes(genes, mateTarget.GetComponent<DinoBehavior>().genes);
             }
 
             Debug.Log("MATED");
@@ -489,10 +561,6 @@ public class DinoBehavior : Organism
             lastMateTime = Time.time;
             // reset state
             currentState = BehaviorState.None;
-        }
-        else
-        {
-            Debug.Log("unfinished iterations");
         }
     }
 
@@ -539,6 +607,13 @@ public class DinoBehavior : Organism
     void Eat()
     {
         float eatAmt = 5;
+
+        // check if our foodtarget is null. if it is then stop eating
+        if(foodTarget == null)
+        {
+            currentState = BehaviorState.None;
+        }
+
         // eat if we're hungry
         if(hunger > eatAmt)
         {

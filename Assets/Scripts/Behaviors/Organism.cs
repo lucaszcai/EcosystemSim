@@ -22,7 +22,7 @@ public class Organism : MonoBehaviour
         if (!dead)
         {
             dead = true;
-            Debug.Log("destroying this object");
+            //Debug.Log("destroying this object");
             // pause for 4 seconds before dying
             Destroy(gameObject);
         }

@@ -203,6 +203,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Parasaurolophus 1 (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 4706451050699716409, guid: 8068677d23de37844929272d50701623, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4706451050700204825, guid: 8068677d23de37844929272d50701623, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -481,8 +485,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701215221}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.5, y: 0, z: 13.2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 37, y: 0, z: 254}
+  m_LocalScale: {x: 1, y: 100, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -886,6 +890,7 @@ GameObject:
   - component: {fileID: 1046868290}
   - component: {fileID: 1046868289}
   - component: {fileID: 1046868293}
+  - component: {fileID: 1046868296}
   - component: {fileID: 1046868295}
   - component: {fileID: 1046868294}
   m_Layer: 0
@@ -989,7 +994,9 @@ MonoBehaviour:
   waterTile: {fileID: 3226681661054693048, guid: fced7caf586e2a44699a53bf04d3ba06, type: 3}
   food: {fileID: 1478713990407210, guid: 9f294228c096da94a8f397a421204e46, type: 3}
   dino: {fileID: 4706451050699716409, guid: 8068677d23de37844929272d50701623, type: 3}
-  maxFood: 50
+  numStartingDinos: 25
+  maxFood: 200
+  logger: {fileID: 1046868296}
 --- !u!154 &1046868294
 TerrainCollider:
   m_ObjectHideFlags: 0
@@ -1035,6 +1042,19 @@ Terrain:
   m_GroupingID: 0
   m_RenderingLayerMask: 1
   m_AllowAutoConnect: 0
+--- !u!114 &1046868296
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1046868288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6717659df058fed458fc19df160dad41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  csvFileName: population_log.csv
 --- !u!1001 &1178963830
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1134,9 +1154,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4706451050330221221, guid: 8068677d23de37844929272d50701623, type: 3}
+      propertyPath: m_Radius
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4706451050330221223, guid: 8068677d23de37844929272d50701623, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4706451050699716409, guid: 8068677d23de37844929272d50701623, type: 3}
       propertyPath: m_Name
       value: Parasaurolophus 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4706451050699716409, guid: 8068677d23de37844929272d50701623, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4706451050700204825, guid: 8068677d23de37844929272d50701623, type: 3}
       propertyPath: m_RootOrder
@@ -1144,7 +1176,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4706451050700204825, guid: 8068677d23de37844929272d50701623, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 10.361782
+      value: 10.36
       objectReference: {fileID: 0}
     - target: {fileID: 4706451050700204825, guid: 8068677d23de37844929272d50701623, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1152,7 +1184,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4706451050700204825, guid: 8068677d23de37844929272d50701623, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 51.541237
+      value: 55.09
       objectReference: {fileID: 0}
     - target: {fileID: 4706451050700204825, guid: 8068677d23de37844929272d50701623, type: 3}
       propertyPath: m_LocalRotation.w

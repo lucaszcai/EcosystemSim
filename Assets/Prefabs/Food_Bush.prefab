@@ -112,3 +112,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coord: {x: 0, y: 0}
   health: 5
+  floor: {fileID: 0}
