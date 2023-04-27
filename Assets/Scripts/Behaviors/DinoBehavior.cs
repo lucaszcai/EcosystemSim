@@ -55,6 +55,8 @@ public class DinoBehavior : Organism
     string[] traits = new string[] { "speed", "sense" };
     float[] defaultVals = new float[] { 7, 20 };
 
+    public float[] traitVals = new float[2];
+
     float lastMove = 0;
 
     public GameObject floor;
@@ -94,6 +96,8 @@ public class DinoBehavior : Organism
         // set speed
         navMeshAgent.speed = genes.getVal("speed");
         sphereCollider.radius = genes.getVal("sense");
+        traitVals[0] = genes.getVal("speed");
+        traitVals[1] = genes.getVal("sense");
         if (genes.getMale())
         {
             indicator.GetComponent<Renderer>().material = maleColor;
@@ -372,7 +376,6 @@ public class DinoBehavior : Organism
         {
             case BehaviorState.Exploring:
                 // make sure our random coord is reachable, only move if it is
-                //Vector3 coord = new Vector3(transform.position.x + Random.Range(-10, 10), 0, transform.position.z + Random.Range(-10, 10));
                 Vector3 coord = chooseExploreCoord();
 
                 NavMeshHit hit;
@@ -428,8 +431,6 @@ public class DinoBehavior : Organism
                 }
                 break;
             case BehaviorState.GoingToMate:
-                // get water edge
-
                 // male goes to female
                 if (genes.getMale())
                 {

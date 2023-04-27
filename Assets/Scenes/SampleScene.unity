@@ -994,8 +994,8 @@ MonoBehaviour:
   waterTile: {fileID: 3226681661054693048, guid: fced7caf586e2a44699a53bf04d3ba06, type: 3}
   food: {fileID: 1478713990407210, guid: 9f294228c096da94a8f397a421204e46, type: 3}
   dino: {fileID: 4706451050699716409, guid: 8068677d23de37844929272d50701623, type: 3}
-  numStartingDinos: 25
-  maxFood: 200
+  numStartingDinos: 40
+  maxFood: 250
   logger: {fileID: 1046868296}
 --- !u!154 &1046868294
 TerrainCollider:
@@ -1055,6 +1055,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   csvFileName: population_log.csv
+  traitsFileName: trait_log.csv
 --- !u!1001 &1178963830
 PrefabInstance:
   m_ObjectHideFlags: 0

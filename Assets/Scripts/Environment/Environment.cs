@@ -60,7 +60,11 @@ public class Environment : MonoBehaviour
             else
             {
 
-                logger.writePopulation(getPopulation());
+                //logger.writePopulation(getPopulation());
+                logger.writePopulation(allDinos.Count);
+                float[] traitAvgs = getTraitAverages();
+                //Debug.Log(traitAvgs[0] + " " + traitAvgs[1]);
+                logger.writeTraits(traitAvgs[0], traitAvgs[1]);
             }
         }
     }
@@ -156,6 +160,27 @@ public class Environment : MonoBehaviour
         allDinos.Remove(dino);
     }
 
+    float[] getTraitAverages()
+    {
+        float[] traitTotals = new float[2];
+
+        // speed
+        for(int i = 0; i < allDinos.Count; i++)
+        {
+            traitTotals[0] += allDinos[i].GetComponent<DinoBehavior>().traitVals[0];
+        }
+        // sense
+        for (int i = 0; i < allDinos.Count; i++)
+        {
+            traitTotals[1] += allDinos[i].GetComponent<DinoBehavior>().traitVals[1];
+        }
+
+        traitTotals[0] = traitTotals[0] / allDinos.Count;
+        traitTotals[1] = traitTotals[1] / allDinos.Count;
+
+        return traitTotals;
+    }
+
     int getPopulation()
     {
         int nonNullCount = 0;
@@ -236,7 +261,6 @@ public class Environment : MonoBehaviour
 
     void generateFood()
     {
-        //Debug.Log("generating food");
         // generate random coordinate
         int randX = Mathf.RoundToInt(Random.Range(0, mapWidth));
         int randY = Mathf.RoundToInt(Random.Range(0, mapHeight));
@@ -251,7 +275,6 @@ public class Environment : MonoBehaviour
         // generate food prefab
         GameObject newFood = Instantiate(food, new Vector3(randX + 0.5f, 0, randY + 0.5f), Quaternion.identity);
         newFood.GetComponent<FoodBush>().setCoord(randX, randY);
-        //Debug.Log("Generated Food at : " + randX + " " + randY);
         numFood++;
 
         // mark tile as food
